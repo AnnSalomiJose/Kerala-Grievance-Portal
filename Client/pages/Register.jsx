@@ -17,6 +17,8 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const API_URL = "https://kerala-grievance-portal-7.onrender.com";
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -37,7 +39,7 @@ function Register() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/users/register",
+        `${API_URL}/api/users/register`,
         {
           name: formData.name,
           email: formData.email,
@@ -175,7 +177,10 @@ function Register() {
 
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{" "}
-          <Link to="/login" className="font-semibold text-blue-900 hover:underline">
+          <Link
+            to="/login"
+            className="font-semibold text-blue-900 hover:underline"
+          >
             Login
           </Link>
         </p>

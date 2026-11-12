@@ -1,6 +1,5 @@
 
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
@@ -10,19 +9,22 @@ dotenv.config({
   path: path.join(__dirname, ".env"),
 });
 
-// Initialize Express App
-const app = express();
+// Import Database Connection
+const connectDB = require("./config/db");
 
 // Import Routes
 const userRoutes = require("./routes/userRoutes");
 const grievanceRoutes = require("./routes/grievanceRoutes");
+
+// Initialize Express App
+const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static Files - Uploaded Attachments
+// Static Files
 app.use(
   "/uploads",
   express.static(path.join(__dirname, "uploads"))
@@ -51,31 +53,20 @@ app.use((req, res) => {
 // Server Port
 const PORT = process.env.PORT || 5000;
 
-// Start Server and Connect MongoDB
+// Start Server
 const startServer = async () => {
   try {
-    const MONGO_URI = process.env.MONGO_URI;
-    const JWT_SECRET = process.env.JWT_SECRET;
-
-    // Check MongoDB URI
-    if (!MONGO_URI) {
-      throw new Error("MONGO_URI is missing. Please add it in Render Environment.");
-    }
-
-    // Check JWT Secret
-    if (!JWT_SECRET) {
-      throw new Error("JWT_SECRET is missing. Please add it in Render Environment.");
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is missing.");
     }
 
     // Connect MongoDB
-    await mongoose.connect(MONGO_URI);
-
-    console.log("MongoDB Connected Successfully");
+    await connectDB();
 
     // Start Express Server
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
-      console.log("JWT SECRET LOADED:", !!JWT_SECRET);
+      console.log("JWT SECRET LOADED:", true);
     });
 
   } catch (error) {

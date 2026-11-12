@@ -3,6 +3,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000";
+
 function SubmitGrievance() {
   const navigate = useNavigate();
 
@@ -56,11 +59,18 @@ function SubmitGrievance() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setError("");
     setLoading(true);
 
     try {
       const token = localStorage.getItem("token");
+
+      if (!token) {
+        setError("Please login first.");
+        setLoading(false);
+        return;
+      }
 
       const data = new FormData();
 
@@ -74,7 +84,7 @@ function SubmitGrievance() {
       }
 
       const response = await axios.post(
-        "http://localhost:5000/api/grievances/submit",
+        `${API_URL}/api/grievances/submit`,
         data,
         {
           headers: {
@@ -83,8 +93,14 @@ function SubmitGrievance() {
         }
       );
 
+      const grievance = response.data.grievance;
+
+      if (!grievance) {
+        throw new Error("Invalid server response.");
+      }
+
       setReferenceNumber(
-        response.data.grievance.referenceNumber
+        grievance.referenceNumber || grievance.referenceNo
       );
 
       setFormData({
@@ -95,10 +111,14 @@ function SubmitGrievance() {
       });
 
       setAttachment(null);
-    } catch (error) {
+
+    } catch (err) {
+      console.error("Grievance submission error:", err);
+
       setError(
-        error.response?.data?.message ||
-          "Unable to submit grievance. Please try again."
+        err.response?.data?.message ||
+        err.message ||
+        "Unable to submit grievance. Please try again."
       );
     } finally {
       setLoading(false);
@@ -109,6 +129,11 @@ function SubmitGrievance() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
         <div className="w-full max-w-lg rounded-2xl bg-white p-8 text-center shadow-lg">
+
+          <div className="mb-4 text-5xl text-green-600">
+            ✓
+          </div>
+
           <h1 className="text-2xl font-bold text-green-700">
             Grievance Submitted Successfully!
           </h1>
@@ -131,6 +156,7 @@ function SubmitGrievance() {
           >
             Back to Dashboard
           </button>
+
         </div>
       </div>
     );
@@ -138,6 +164,7 @@ function SubmitGrievance() {
 
   return (
     <div className="min-h-screen bg-gray-100 px-4 py-10">
+
       <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 shadow-lg">
 
         <h1 className="text-3xl font-bold text-gray-800">
@@ -254,10 +281,11 @@ function SubmitGrievance() {
           )}
 
           <div className="flex flex-wrap gap-4">
+
             <button
               type="submit"
               disabled={loading}
-              className="rounded-lg bg-blue-700 px-6 py-3 font-semibold text-white hover:bg-blue-800 disabled:opacity-60"
+              className="rounded-lg bg-blue-700 px-6 py-3 font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? "Submitting..." : "Submit Grievance"}
             </button>
@@ -269,6 +297,7 @@ function SubmitGrievance() {
             >
               Cancel
             </button>
+
           </div>
 
         </form>
